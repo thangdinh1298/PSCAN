@@ -63,7 +63,32 @@ class Degree_manager:
 		self.num_vertices = num_vertices
 		self.ef_degree = [Linked_list() for i in range(self.num_vertices)] #optimization possible, set this to max deg
 		self.sim_degree = [0 for i in range(self.num_vertices)] # set this to num of vertices
+		self.max_ed = num_vertices - 1
+
+	def get_top_item_with_max_ed(self):
+		while self.ef_degree[self.max_ed].is_empty():
+			self.max_ed -= 1
+		return self.ef_degree[self.max_ed].head.val
+
+	def decrease_ed_of_top(self):
+		if self.max_ed == 0: # if already at 0 then do nuffin'
+			print("effective degree can't be less than 0")
+
+		node = self.ef_degree[self.max_ed].head
+		self.ef_degree[self.max_ed].remove_top()
+		self.ef_degree[self.max_ed - 1].add(node)
+
+	def init_node_ed(self, node_num, ed):
+		try:
+			self.ef_degree[ed].add(Node(node_num))
+		except:
+			print("effective degree can't be larger than max num of vertices")
 
 dm = Degree_manager(20)
-for i in dm.ef_degree:
-	print(i)
+dm.init_node_ed(5,2)
+dm.init_node_ed(2,4)
+dm.init_node_ed(7,2) 
+dm.init_node_ed(8,4)
+dm.init_node_ed(19,20)
+for ll in dm.ef_degree:
+	ll.print()
