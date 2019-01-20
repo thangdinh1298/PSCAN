@@ -49,10 +49,12 @@ class Linked_list:
 		temp = self.head
 		self.head = self.head.next
 		self.size -= 1
+		temp.next = None
+		print("removed ", temp)
 	def print(self):
 		temp = self.head
 		while temp != None:
-			print(temp.val)
+			print(temp.val, " ", end="")
 			temp = temp.next
 
 	def is_empty(self):
@@ -61,34 +63,66 @@ class Linked_list:
 class Degree_manager:
 	def __init__(self,  num_vertices):
 		self.num_vertices = num_vertices
-		self.ef_degree = [Linked_list() for i in range(self.num_vertices)] #optimization possible, set this to max deg
+		self.ef_degree = [0 for i in range(self.num_vertices)] #optimization possible, set this to max deg
 		self.sim_degree = [0 for i in range(self.num_vertices)] # set this to num of vertices
-		self.max_ed = num_vertices - 1
+		self.buckets = [Linked_list() for i in range(self.num_vertices)]
+		self.max_ed = -1
 
-	def get_top_item_with_max_ed(self):
-		while self.ef_degree[self.max_ed].is_empty():
-			self.max_ed -= 1
-		return self.ef_degree[self.max_ed].head.val
-
-	def decrease_ed_of_top(self):
-		if self.max_ed == 0: # if already at 0 then do nuffin'
-			print("effective degree can't be less than 0")
-
-		node = self.ef_degree[self.max_ed].head
-		self.ef_degree[self.max_ed].remove_top()
-		self.ef_degree[self.max_ed - 1].add(node)
+	def increment_sd(self, vertex):
+		self.sim_degree[vertex] += 1		
 
 	def init_node_ed(self, node_num, ed):
 		try:
-			self.ef_degree[ed].add(Node(node_num))
+			self.buckets[ed].add(Node(node_num))
+			self.ef_degree[node_num] = ed
+			if ed > self.max_ed:
+				self.max_ed = ed
 		except:
 			print("effective degree can't be larger than max num of vertices")
 
-dm = Degree_manager(20)
-dm.init_node_ed(5,2)
-dm.init_node_ed(2,4)
-dm.init_node_ed(7,2) 
-dm.init_node_ed(8,4)
-dm.init_node_ed(19,20)
-for ll in dm.ef_degree:
-	ll.print()
+	def set_sd(self, node_num, sd):
+		self.sim_degree[node_num] = sd
+
+	def set_ed(self, node_num, ed):
+		old_ed = self.ef_degree[node_num]
+		if self.buckets[old_ed].is_empty(): #empty when initialize
+			pass
+		#remove from bucket 
+		if self.buckets[old_ed].head.val == node_num:
+			self.buckets[old_ed].remove_top()
+		else:
+			node = self.buckets[old_ed].head
+			while node.next.val != node_num:
+				node = node.next
+			temp = node.next
+			node.next = temp.next
+			temp.next = None
+		# add to new bucket
+		self.buckets[ed].add(Node(node_num))
+		#update ef_degree
+		ef_degree[node_num] = ed
+
+	def get_ed(self, vertex):
+		return self.ef_degree[vertex]
+
+	def get_sd(self, vertex):
+		return self.sim_degree[vertex]
+
+
+	def get_top_item_with_max_ed(self):
+		# print(self.max_ed)
+		return self.buckets[self.max_ed].head.val
+
+	def decrement_ed_of_top(self):
+		if self.max_ed == 0: # if already at 0 then do nuffin'
+			print("effective degree can't be less than 0")
+
+		node = self.buckets[self.max_ed].head
+		# print("top val is: ", node.val)
+		# print("node value is: ", node.val)
+		self.buckets[self.max_ed].remove_top()
+		self.buckets[self.max_ed - 1].add(node)
+		if self.buckets[self.max_ed].is_empty():
+			self.max_ed -= 1
+		# decrease in ef_degree array
+		self.ef_degree[node.val] -= 1
