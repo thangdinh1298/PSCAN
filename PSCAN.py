@@ -2,6 +2,7 @@ from Graph import Graph
 from GraphReader import GraphReader
 from math import sqrt
 from Utils import Disjoint_set
+import pdb
 
 class PSCAN:
     G = {}
@@ -12,8 +13,7 @@ class PSCAN:
         self.s = s
         self.G = graph.get_dict()
         self.num_nodes = num_nodes
-        self.dm = Degree_manager(self.num_nodes)
-        self.ds = Disjoint_set(self.num_nodes)
+
 
     def get_similarity(self, u, v):
         r_u = set()
@@ -30,50 +30,85 @@ class PSCAN:
 
         return len(r_u & r_v) / sqrt(len(r_u) * len(r_v))
 
-
-    def check_core(self, vertex):
-        if self.dm.get_ed(vertex) >= self. s and self.dm.get_sd < self.s:
-            self.dm.set_ed(vertex, 0 if vertex not in self.G else len(G[vertex]) )
-            self.dm.set_sd(vertex, 0)
-            for v in G[vertex]:
-                sim = self.get_similarity(vertex, v)
-                if sim >= self.e:
-                    self.dm.increment_sd(vertex)
-                else:
-                    decrement
-
     def do_scan(self):
-        # explored = [False for i in range(self.num_nodes)]
-        # #init effective degree
-        # for vertex in range(self.num_nodes):
-        #     self.dm.init_node_sd(vertex, 0)
-        #     if vertex in G:
-        #         self.dm.init_node_ed(vertex, len(G[vertex]))
-        #     else:
-        #         self.dm.init_node_ed(vertex, 0)
-
-        # #phase 1
-        # i = 1
-        # while i <= self.num_nodes:
-        #     vertex = self.dm.get_top_item_with_max_deg()
-        #     if explored[vertex] == False:
-        #         self.check_core(vertex)
-        #         if self.dm.get_sd(vertex) >= self.s:
-        #             self.cluster_core(u)
-        #         i += 1
         similar_degree = [0 for i in range(self.num_nodes)]
-        effective_degree = [0 if i not in self.G else len(G[i]) for i in range(self.num_nodes)]
+        effective_degree = [0 if i not in self.G else len(self.G[i]) for i in range(self.num_nodes)]
         ds = Disjoint_set(self.num_nodes)
         bin_head = [-1 for i in range(self.num_nodes)]
         bin_next = [-1 for i in range(self.num_nodes)]
         max_ed = 0
-        for index, value in effective_degree:
-            if value >= s:
-                ed = value
-                if ed > max_ed:
-                    max_ed = ed
-                bin_next[index] = bin_head[ed]
-                bin_head[ed] = index
+        def set_ed(vertex, ed):
+            nonlocal max_ed
+            if ed > max_ed: max_ed = ed
+            old_ed = effective_degree[vertex]
+            if vertex == bin_head[old_ed]:
+                bin_head[old_ed] = bin_next[vertex]
+                # print("hi")
+            else:
+                for i, value in enumerate(bin_next):
+                    if value == vertex:
+                        bin_next[i] = bin_next[vertex]
+            effective_degree[vertex] = ed
+            if ed < 0:
+                bin_next[vertex] = -1
+                return
+            bin_next[vertex] = bin_head[ed]
+            bin_head[ed] = vertex
+        
+        def get_u(): #assuming no increase in ed were added
+            nonlocal max_ed
+            while bin_head[max_ed] == - 1 and max_ed >= 0:
+                max_ed -= 1
+            return -1 if max_ed < self.s else bin_head[max_ed]
+
+        def check_core(u):
+            if effective_degree[u] > self.s and similar_degree[u] < self.s:
+                set_ed(u, 0 if u not in self.G else len(self.G[u]))
+                similar_degree[u] = 0
+                for v in self.G[u]:
+                    sim = self.get_similarity(u, v)
+                    if sim >= self.e: similar_degree[u] += 1
+                    else: set_ed(u, effective_degree[u] - 1)
+                    if effective_degree[v] >= 0:
+                        if sim >= self.e: similar_degree[v] += 1
+                        else: set_ed(v, effective_degree[v] - 1)
+                    if effective_degree[u] < self.s or similar_degree[u] >= self.s:
+                        break
+            set_ed(u, -1)
+
+        for index, value in enumerate(effective_degree): #init the bin data structure
+            if value >= self.s:
+                set_ed(index, value)
 
         while True:
-            u = -1
+            u = get_u()
+            if u == -1: break
+            check_core(u)
+            print(u)
+            # if similar_degree[u] >= self.s:
+            #     cluster_core(u)
+        #     set_ed(u, -1)
+        #     print(u)
+        #     print("bin_head: ",bin_head)
+        #     print("bin next: ",bin_next)
+        # pdb.set_trace()
+        # set_ed(1, -1)
+        # set_ed(4, 4)
+        # print(self.G)
+        # print("sim_degree: ",similar_degree)
+        # print("effective degree: ",effective_degree)
+        # print("bin head: ", bin_head)
+        # print("bin next: ", bin_next)
+
+gr = GraphReader("graph_out.txt")
+sc = PSCAN(0.7,2, gr.get_graph(), gr.num_nodes)
+sc.do_scan()
+
+# def hi():
+#     a = [1,2,3,4]
+#     def hello():
+#         # nonlocal a
+#         a[0] = 2
+#     hello()
+#     print(a)
+# hi()
