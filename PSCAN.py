@@ -143,7 +143,7 @@ class PSCAN:
 
         # print(ds.d)
 
-
-gr = GraphReader("new_test.txt")
-sc = PSCAN(0.7, 2, gr.get_graph(), gr.num_nodes)
+# Graph trong bai xiaowei lay tham so la 0.677 va 4
+gr = GraphReader("graph_out.txt")
+sc = PSCAN(0.677, 4, gr.get_graph(), gr.num_nodes)
 sc.do_scan()
