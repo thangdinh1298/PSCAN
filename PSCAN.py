@@ -61,12 +61,15 @@ class PSCAN:
                 max_ed -= 1
             return -1 if max_ed < self.s else bin_head[max_ed]
 
-        def check_core(u):
-            if effective_degree[u] > self.s and similar_degree[u] < self.s:
+        def check_core(u, computed):
+            # print("Check if {} is a core: ".format(u))
+            if effective_degree[u] >= self.s and similar_degree[u] < self.s:
                 set_ed(u, 0 if u not in self.G else len(self.G[u]))
                 similar_degree[u] = 0
                 for v in self.G[u]:
                     sim = self.get_similarity(u, v)
+                    # print("similarity to {} is {}".format(v, sim))
+                    computed[v] = sim
                     if sim >= self.e: similar_degree[u] += 1
                     else: set_ed(u, effective_degree[u] - 1)
                     if effective_degree[v] >= 0:
@@ -74,19 +77,42 @@ class PSCAN:
                         else: set_ed(v, effective_degree[v] - 1)
                     if effective_degree[u] < self.s or similar_degree[u] >= self.s:
                         break
+            # print(similar_degree)
             set_ed(u, -1)
+
+        def cluster_core(u, computed):
+            for v in computed:
+                if similar_degree[v] >= self.s and computed[v] >= self.e:
+                    ds.union(u, v)
+
+            for v in self.G[u]:
+                if v not in computed:
+                    if ds.is_connected(u, v) == False and effective_degree[v] >= self.s:
+                        sim  = self.get_similarity(u, v)
+                        if effective_degree[v] >= 0:
+                            if sim  > self.e:
+                                similar_degree[v] += 1
+                            else: set_ed(v, effective_degree[v] - 1)
+                        if similar_degree[v] > self.s and sim >= self.e:
+                            ds.union(u, v)
 
         for index, value in enumerate(effective_degree): #init the bin data structure
             if value >= self.s:
                 set_ed(index, value)
-
+        print(effective_degree)
         while True:
             u = get_u()
             if u == -1: break
-            check_core(u)
-            print(u)
-            # if similar_degree[u] >= self.s:
-            #     cluster_core(u)
+            computed = {}
+            check_core(u, computed)
+            if similar_degree[u] >= self.s:
+                print(u)
+                cluster_core(u, computed)
+
+        #finished clustering core
+
+        print(ds.d)
+
         #     set_ed(u, -1)
         #     print(u)
         #     print("bin_head: ",bin_head)
@@ -100,8 +126,8 @@ class PSCAN:
         # print("bin head: ", bin_head)
         # print("bin next: ", bin_next)
 
-gr = GraphReader("graph_out.txt")
-sc = PSCAN(0.7,2, gr.get_graph(), gr.num_nodes)
+gr = GraphReader("fig5.txt")
+sc = PSCAN(0.6,3, gr.get_graph(), gr.num_nodes)
 sc.do_scan()
 
 # def hi():

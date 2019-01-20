@@ -15,13 +15,13 @@ class Disjoint_set:
 		if r_x == r_y:
 			return
 		if self.size[r_x] < self.size[r_y]:
-			self.DJS[r_x]= r_y
+			self.d[r_x]= r_y
 			self.size[r_y] += self.size[r_x]
 		else:
-			self.DJS[r_y]= r_x
+			self.d[r_y]= r_x
 			self.size[r_x] += self.size[r_y]
 
-	def isConnected(self, x, y):
+	def is_connected(self, x, y):
 		return self.find(x) == self.find(y)
 
 class Node:
