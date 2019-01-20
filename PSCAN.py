@@ -115,7 +115,6 @@ class PSCAN:
                         for v in self.G[u]:
                             if similar_degree[v] < self.s and v not in cluster_copy:
                                 sim = self.get_similarity(u, v)
-                                # print("{}, {} sim: {}".format(u,v, sim))
                                 if sim >= self.e:
                                     cluster.append(v)
 
@@ -135,16 +134,16 @@ class PSCAN:
             computed = {}
             check_core(u, computed)
             if similar_degree[u] >= self.s:
-                print(u)
+                # print(u)
                 cluster_core(u, computed)
 
         # print(similar_degree)
         cluster_non_core()
         #finished clustering core
 
-        print(ds.d)
+        # print(ds.d)
 
 
-gr = GraphReader("graph_out.txt")
-sc = PSCAN(2/sqrt(15),4, gr.get_graph(), gr.num_nodes)
+gr = GraphReader("new_test.txt")
+sc = PSCAN(0.7, 2, gr.get_graph(), gr.num_nodes)
 sc.do_scan()
