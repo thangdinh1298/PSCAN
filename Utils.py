@@ -1,7 +1,7 @@
 class Disjoint_set:
 	def __init__(self, n):
 		self.d = [i for i in range(n)]
-		self.size = [ 1 for i in range(n)]
+		self.size = [ 1 for i in range(size + 1)]
 
 	def find(self, x):
 		while x != self.d[x]:
@@ -15,13 +15,13 @@ class Disjoint_set:
 		if r_x == r_y:
 			return
 		if self.size[r_x] < self.size[r_y]:
-			self.d[r_x]= r_y
+			self.DJS[r_x]= r_y
 			self.size[r_y] += self.size[r_x]
 		else:
-			self.d[r_y]= r_x
+			self.DJS[r_y]= r_x
 			self.size[r_x] += self.size[r_y]
 
-	def is_connected(self, x, y):
+	def isConnected(self, x, y):
 		return self.find(x) == self.find(y)
 
 class Node:
@@ -49,14 +49,21 @@ class Linked_list:
 		temp = self.head
 		self.head = self.head.next
 		self.size -= 1
-		temp.next = None
-		print("removed ", temp)
 	def print(self):
 		temp = self.head
 		while temp != None:
-			print(temp.val, " ", end="")
+			print(temp.val)
 			temp = temp.next
 
 	def is_empty(self):
 		return self.size == 0
 
+class Degree_manager:
+	def __init__(self,  num_vertices):
+		self.num_vertices = num_vertices
+		self.ef_degree = [Linked_list() for i in range(self.num_vertices)] #optimization possible, set this to max deg
+		self.sim_degree = [0 for i in range(self.num_vertices)] # set this to num of vertices
+
+dm = Degree_manager(20)
+for i in dm.ef_degree:
+	print(i)
