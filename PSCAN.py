@@ -1,6 +1,6 @@
 from Graph import Graph
 from GraphReader import GraphReader
-from math import sqrt
+from math import sqrt, ceil
 from Utils import Disjoint_set
 import sys
 
@@ -20,21 +20,32 @@ class PSCAN:
                 self.G[i][i] = 0.0
 
 
-    def get_similarity(self, u, v):
-        r_u = set()
-        r_u.add(u)
-        if u in self.G:
-            for key in self.G[u]:
-                r_u.add(key)
+    # def get_similarity(self, u, v):
+    #     r_u = set()
+    #     r_u.add(u)
+    #     if u in self.G:
+    #         for key in self.G[u]:
+    #             r_u.add(key)
         
-        r_v = set()
-        r_v.add(v)
-        if v in self.G:
-            for key in self.G[v]:
-                r_v.add(key)
+    #     r_v = set()
+    #     r_v.add(v)
+    #     if v in self.G:
+    #         for key in self.G[v]:
+    #             r_v.add(key)
 
-        # print("len {} is {}, len {} is {}, len u&v is {}".format(u, len(r_u), v, len(r_v), len(r_u&r_v)))
-        return len(r_u & r_v) / sqrt(len(r_u) * len(r_v))
+    #     # print("len {} is {}, len {} is {}, len u&v is {}".format(u, len(r_u), v, len(r_v), len(r_u&r_v)))
+    #     return len(r_u & r_v) / sqrt(len(r_u) * len(r_v))
+
+    def check_structure_simmilar(self, u, v):
+        cn_u_v = ceil(self.e * sqrt(len(self.G[u]) * len(self.G[v])))
+
+        cn = 0
+        for x in self.G[u]:
+            if x in self.G[v]:
+                cn += 1
+                if cn >= cn_u_v:
+                    return True
+        return False
 
     def do_scan(self):
         similar_degree = [0 for i in range(self.num_nodes)]
@@ -76,12 +87,12 @@ class PSCAN:
                 set_ed(u, len(self.G[u])) # since we're not looping through u itself, preinitialize sd and ed to be 2
                 similar_degree[u] = 0
                 for v in self.G[u]:
-                    sim = self.get_similarity(u, v)
-                    computed[v] = sim
-                    if sim >= self.e: similar_degree[u] += 1
+                    is_sim = self.check_structure_simmilar(u, v)
+                    computed[v] = is_sim
+                    if is_sim == True: similar_degree[u] += 1
                     else: set_ed(u, effective_degree[u] - 1)
                     if effective_degree[v] >= 0:
-                        if sim >= self.e: similar_degree[v] += 1
+                        if is_sim == True: similar_degree[v] += 1
                         else: set_ed(v, effective_degree[v] - 1)
                     if effective_degree[u] < self.s or similar_degree[u] >= self.s:
                         break
@@ -95,12 +106,12 @@ class PSCAN:
             for v in self.G[u]:
                 if v not in computed:
                     if ds.is_connected(u, v) == False and effective_degree[v] >= self.s:
-                        sim  = self.get_similarity(u, v)
+                        is_sim  = self.check_structure_simmilar(u, v)
                         if effective_degree[v] >= 0:
-                            if sim  >= self.e:
+                            if is_sim  == True:
                                 similar_degree[v] += 1
                             else: set_ed(v, effective_degree[v] - 1)
-                        if similar_degree[v] > self.s and sim >= self.e:
+                        if similar_degree[v] > self.s and is_sim == True:
                             ds.union(u, v)
 
         def cluster_non_core():
@@ -114,8 +125,8 @@ class PSCAN:
                     for u in cluster_copy:
                         for v in self.G[u]:
                             if similar_degree[v] < self.s and v not in cluster_copy:
-                                sim = self.get_similarity(u, v)
-                                if sim >= self.e:
+                                is_sim = self.check_structure_simmilar(u, v)
+                                if is_sim == True:
                                     cluster.append(v)
 
             for cluster in clusters:
