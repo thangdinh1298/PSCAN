@@ -76,7 +76,6 @@ class PSCAN:
             nonlocal max_ed
             while bin_head[max_ed] == - 1 and max_ed >= 0:
                 max_ed -= 1
-            # print(max_ed, bin_head[max_ed])
             return -1 if max_ed < self.s else bin_head[max_ed]
 
         def check_core(u, computed):
@@ -100,7 +99,7 @@ class PSCAN:
 
         def cluster_core(u, computed):
             for v in computed:
-                if similar_degree[v] >= self.s and computed[v] >= self.e:
+                if similar_degree[v] >= self.s and computed[v] == True:
                     ds.union(u, v)
 
             for v in self.G[u]:
