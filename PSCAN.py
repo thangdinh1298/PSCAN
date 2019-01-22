@@ -114,11 +114,13 @@ class PSCAN:
                             ds.union(u, v)
 
         def cluster_non_core():
-            clusters = [[] for i in range(self.num_nodes)]
             for v in range(self.num_nodes):
                 if similar_degree[v] >= self.s:
-                    clusters[ds.find(v)].append(v)
-            for cluster in clusters:
+                    root = ds.find(v)
+                    clusters[root].append(v)
+                    cid[v].append(root)
+
+            for index ,cluster in enumerate(clusters):
                 if len(cluster) > 0:
                     cluster_copy = set(cluster)
                     for u in cluster_copy:
@@ -127,11 +129,63 @@ class PSCAN:
                                 is_sim = self.check_structure_simmilar(u, v)
                                 if is_sim == True:
                                     cluster.append(v)
-
+                                    cid[v].append(index)
             for cluster in clusters:
                 if len(cluster) > 0:
                     print("Cluster includes: ",set(cluster))
 
+        # def detect_hub_and_outlier():
+        #     for v, id in enumerate(cid):
+        #         if len(id) == 0: # is a non_member
+        #             is_bridge = False
+        #             for x in self.G[v]:
+        #                 if is_bridge == True:
+        #                     break
+        #                 for y in self.G[v]:
+        #                     if x != y: 
+        #                         is_bridge = check_bridge(v, x, y)
+        #                         if is_bridge == True:
+        #                             break
+        #             if is_bridge == False:
+        #                 outliers.append(v)
+
+        # def check_bridge(v, x, y):
+        #     if len(cid[x]) == 0 or len(cid[y]) == 0: # if cid[x] = 0 OR cid[y] = 0 then outlier
+        #         return False
+        #     else:
+        #         for i in cid[x]:
+        #             if i not in cid[y]: #is a hub
+        #                 hubs.append(v)
+        #                 return True
+        #         for j in cid[y]:
+        #             if j not in cid[x]: #is a hub
+        #                 hubs.append(v)
+        #                 return True
+        #     return False
+
+        def detect_hub_and_outlier():
+            for v, id in enumerate(cid):
+                if len(id) == 0: # is a non_member
+                    if is_hub(v):
+                        hubs.append(v)
+                    else:
+                        outliers.append(v)
+
+        def is_hub(v):
+            for i in range(len(clusters)):
+                for j in range(i+1, len(clusters)):
+                    if is_bridge(v, clusters[i], clusters[j]):
+                        return True
+
+            return False
+
+        def is_bridge(v, clustera, clusterb):
+            for x in self.G[v]:
+                for y in self.G[v]:
+                    if x != y and x != v and y != v:
+                        if x in clustera and y in clusterb:
+                            return True
+            return False    
 
         for index, value in enumerate(effective_degree): #init the bin data structure
             if value >= self.s:
@@ -148,9 +202,15 @@ class PSCAN:
                 cluster_core(u, computed)
 
         # print(similar_degree)
+        clusters = [[] for i in range(self.num_nodes)]
+        cid = [[] for i in range(self.num_nodes)]
         cluster_non_core()
         #finished clustering core
-
+        hubs = []
+        outliers = []
+        detect_hub_and_outlier()
+        print("Hubs are:", hubs)
+        print("Outliers are:", outliers)
         # print(ds.d)
 
 # Graph trong bai xiaowei lay tham so la 0.677 va 4
